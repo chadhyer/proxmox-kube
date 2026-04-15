@@ -15,5 +15,5 @@ docker run --rm -it \
     --volume ./terraform:/usr/local/app/terraform \
     --volume ~/.ssh/:/usr/local/app/.ssh/ \
     --entrypoint /bin/bash \
-    --env-file ./default.env \
+    --env-file ./dev.env \
     $image:$tag
