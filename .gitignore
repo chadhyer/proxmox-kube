@@ -2,5 +2,7 @@ env/
 dev.env
 nebula.env
 secret.auto.tfvars
+ansible/.secret/
+ansible/.key/
 *secret.yml
 .vscode/
