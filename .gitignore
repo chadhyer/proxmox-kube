@@ -3,3 +3,4 @@ dev.env
 nebula.env
 secret.auto.tfvars
 *secret.yml
+.vscode/
