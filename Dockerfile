@@ -34,7 +34,10 @@ RUN mkdir -p /usr/local/app/ansible/inventory/group_vars && \
     chown -R app:app /usr/local/.*
 
 COPY --chown=app:app ./ansible/ansible.cfg /usr/local/app/ansible/ansible.xfg
+COPY --chown=app:app ./entrypoint.sh /usr/local/app/entrypoint.sh
+
+RUN chmod +x /usr/local/app/*.sh
 
 USER app
 
-ENTRYPOINT [ "/bin/bash" ]
+ENTRYPOINT [ "/usr/local/app/entrypoint.sh" ]

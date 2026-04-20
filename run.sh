@@ -14,6 +14,5 @@ docker run --rm -it \
     --volume ./ansible/.key:/usr/local/app/.key \
     --volume ./terraform:/usr/local/app/terraform \
     --volume ~/.ssh/:/usr/local/app/.ssh/ \
-    --entrypoint /bin/bash \
     --env-file ./dev.env \
     $image:$tag
