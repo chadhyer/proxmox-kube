@@ -8,7 +8,7 @@ while (( "$#" )); do
     shift
 done
 
-if [ "${tag}" == '' ];then
+if [ -z "${tag}" ];then
     tag="$(docker images --format table|grep $image|head -n 1|awk '{print $2}')"
     echo "No tag provided and found: '${tag}'"
 fi
