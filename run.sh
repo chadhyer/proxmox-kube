@@ -1,10 +1,19 @@
 #!/bin/bash
 image='proxmox-kube-deployer'
-tag=$1
+
+while (( "$#" )); do
+    case "$1" in
+        -t|--tag) tag=$2;shift;;
+    esac
+    shift
+done
+
 if [ "${tag}" == '' ];then
     tag="$(docker images --format table|grep $image|head -n 1|awk '{print $2}')"
     echo "No tag provided and found: '${tag}'"
 fi
+echo "Starting container image: '${image}:${tag}'"
+
 docker run --rm -it \
     --name $image-run \
     --user "${USERID:-1000}:${GROUPID:-$USERID}" \
