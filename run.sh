@@ -1,5 +1,5 @@
 #!/bin/bash
-image='nebula-proxmox'
+image='proxmox-kube-deployer'
 tag=$1
 if [ "${tag}" == '' ];then
     tag="$(docker images --format table|grep $image|head -n 1|awk '{print $2}')"
