@@ -1,6 +1,6 @@
 env/
 dev.env
-nebula.env
+production.env
 secret.auto.tfvars
 ansible/.secret/
 ansible/.key/
