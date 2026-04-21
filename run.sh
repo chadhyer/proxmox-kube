@@ -1,9 +1,9 @@
 #!/bin/bash
-image='proxmox-kube-deployer'
 
 # Arguments
 while (( "$#" )); do
     case "$1" in
+        -i|--image) image=$2;shift;;
         -t|--tag) tag=$2;shift;;
         -e|--env) env=$2;shift;;
         -u|--uid) uid=$2;shift;;
@@ -13,6 +13,7 @@ while (( "$#" )); do
 done
 
 # Default values
+if [ -z "${image}" ];then image="${IMAGE:-proxmox-kube-deployer}";fi
 if [ -z "${tag}" ];then
     tag="$(docker images --format table|grep $image|head -n 1|awk '{print $2}')"
     echo "No tag provided and found: '${tag}'"
@@ -29,7 +30,7 @@ echo "Starting container image: '${image}:${tag}' with env: '${env}'"
 echo ''
 set -x
 docker run --rm -it \
-    --name $image-run \
+    --name ${image}-run \
     --user "${uid}:${gid}" \
     --net=host \
     --volume ./ansible:/usr/local/app/ansible \
@@ -38,4 +39,4 @@ docker run --rm -it \
     --volume ./terraform:/usr/local/app/terraform \
     --volume ~/.ssh/:/usr/local/app/.ssh/ \
     --env-file ${env} \
-    $image:$tag
+    ${image}:${tag}
