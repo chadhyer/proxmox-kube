@@ -1,6 +1,8 @@
 #!/bin/bash
 image='proxmox-kube-deployer'
 
+exe() { echo "\$ ${@/eval/}" ; "$@" ; }
+
 while (( "$#" )); do
     case "$1" in
         -t|--tag) tag=$2;shift;;
@@ -20,7 +22,7 @@ if [ -z "${env}" ];then
     echo "Environment file not provided with -e, so using '${env}'"
 fi
 if [ -z "${uid}" ];then uid="${USERID:-1000}";fi
-if [ -z "${gid}" ];then gid="${GROUPID:-$USERID}";fi
+if [ -z "${gid}" ];then gid="${GROUPID:-$uid}";fi
 echo "Starting container image: '${image}:${tag}' with env: '${env}'"
 
 docker run --rm -it \
