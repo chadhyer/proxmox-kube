@@ -5,6 +5,8 @@ while (( "$#" )); do
     case "$1" in
         -t|--tag) tag=$2;shift;;
         -e|--env) env=$2;shift;;
+        -u|--uid) uid=$2;shift;;
+        -g|--gid) gid=$2;shift;;
     esac
     shift
 done
@@ -17,11 +19,13 @@ if [ -z "${env}" ];then
     env='./dev.env'
     echo "Environment file not provided with -e, so using '${env}'"
 fi
+if [ -z "${uid}" ];then uid="${USERID:-1000}";fi
+if [ -z "${gid}" ];then gid="${GROUPID:-$USERID}";fi
 echo "Starting container image: '${image}:${tag}' with env: '${env}'"
 
 docker run --rm -it \
     --name $image-run \
-    --user "${USERID:-1000}:${GROUPID:-$USERID}" \
+    --user "${uid}:${gid}" \
     --net=host \
     --volume ./ansible:/usr/local/app/ansible \
     --volume ./ansible/.secret:/usr/local/app/.secret \
