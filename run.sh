@@ -1,8 +1,7 @@
 #!/bin/bash
 image='proxmox-kube-deployer'
 
-exe() { echo "\$ ${@/eval/}" ; "$@" ; }
-
+# Arguments
 while (( "$#" )); do
     case "$1" in
         -t|--tag) tag=$2;shift;;
@@ -13,6 +12,7 @@ while (( "$#" )); do
     shift
 done
 
+# Default values
 if [ -z "${tag}" ];then
     tag="$(docker images --format table|grep $image|head -n 1|awk '{print $2}')"
     echo "No tag provided and found: '${tag}'"
@@ -23,6 +23,8 @@ if [ -z "${env}" ];then
 fi
 if [ -z "${uid}" ];then uid="${USERID:-1000}";fi
 if [ -z "${gid}" ];then gid="${GROUPID:-$uid}";fi
+
+# Execute Docker Run
 echo "Starting container image: '${image}:${tag}' with env: '${env}'"
 echo ''
 set -x
