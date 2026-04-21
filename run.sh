@@ -3,7 +3,7 @@ image='proxmox-kube-deployer'
 tag=$1
 if [ "${tag}" == '' ];then
     tag="$(docker images --format table|grep $image|head -n 1|awk '{print $2}')"
-    echo ${tag}
+    echo "No tag provided and found: '${tag}'"
 fi
 docker run --rm -it \
     --name $image-run \
