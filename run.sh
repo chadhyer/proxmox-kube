@@ -5,6 +5,7 @@ while (( "$#" )); do
     case "$1" in
         -i|--image) image=$2;shift;;
         -t|--tag) tag=$2;shift;;
+        -n|--name) name=$2;shift;;
         -e|--env) env=$2;shift;;
         -u|--uid) uid=$2;shift;;
         -g|--gid) gid=$2;shift;;
@@ -18,6 +19,7 @@ if [ -z "${tag}" ];then
     tag="$(docker images --format table|grep $image|head -n 1|awk '{print $2}')"
     echo "No tag provided and found: '${tag}'"
 fi
+if [ -z "${name}" ];then name=${image};fi
 if [ -z "${env}" ];then
     env='./dev.env'
     echo "Environment file not provided with -e, so using '${env}'"
@@ -30,7 +32,7 @@ echo "Starting container image: '${image}:${tag}' with env: '${env}'"
 echo ''
 set -x
 docker run --rm -it \
-    --name ${image}-run \
+    --name ${name} \
     --user "${uid}:${gid}" \
     --net=host \
     --volume ./ansible:/usr/local/app/ansible \
