@@ -24,7 +24,8 @@ fi
 if [ -z "${uid}" ];then uid="${USERID:-1000}";fi
 if [ -z "${gid}" ];then gid="${GROUPID:-$uid}";fi
 echo "Starting container image: '${image}:${tag}' with env: '${env}'"
-
+echo ''
+set -x
 docker run --rm -it \
     --name $image-run \
     --user "${uid}:${gid}" \
