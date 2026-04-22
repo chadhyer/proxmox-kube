@@ -1,0 +1,17 @@
+---
+kube:
+  hosts:
+    kube_template:
+      ansible_host: kube_template
+    cntrl0:
+      ansible_host: kube_cntrl0
+    # cntrl1:
+    #   ansible_host: kube_cntrl1
+    # cntrl2:
+    #   ansible_host: kube_cntrl2
+    worker0:
+      ansible_host: kube_worker0
+    # worker1:
+    #   ansible_host: kube_worker1
+    # worker2:
+    #   ansible_host: kube_worker2
