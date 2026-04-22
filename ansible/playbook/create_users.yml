@@ -1,0 +1,46 @@
+---
+- name: Setup Root PS1
+  hosts: pve_root
+  tasks:
+    - name: Setup root user PS1 prompt
+      ansible.builtin.lineinfile:
+        path: /root/.bashrc
+        regexp: '^PS1=.*'
+        line: '{{ user_ps1 | default("PS1=\"[\d \t \u@\h:\w ] $ \"") }}'
+        state: present
+
+- name: Create user
+  hosts: pve_root
+  vars:
+    user:
+      name: '{{ usr | default("admin") }}'
+      id: '{{ usr_id | default(1000) }}'
+      shell: /bin/bash
+      state: present
+      bashrc: .bashrc
+      sudo: true
+      authorized_keys: .ssh/authorized_keys
+      ssh_key:
+        - type: '{{ usr_ssh_pk_type | default("ssh-ed25519") }}'
+          public: '{{ usr_ssh_pk_public }}'
+          id: '{{ usr_ssh_pk_id }}'
+      prompt: '{{ usr_ps1 | default("PS1=\"[\d \t \u@\h:\w ] $ \"") }}'
+  roles: [user]
+
+- name: Create ansible user
+  hosts: pve_root
+  vars:
+    user:
+      name: '{{ ansible_usr | default("ansible") }}'
+      id: '{{ ansible_id | default(1001) }}'
+      shell: /bin/bash
+      state: present
+      bashrc: .bashrc
+      sudo: true
+      authorized_keys: .ssh/authorized_keys
+      ssh_key:
+        - type: '{{ ansible_ssh_pk_type | default("ssh-ed25519") }}'
+          public: '{{ ansible_ssh_pk_public }}'
+          id: '{{ ansible_ssh_pk_id }}'
+      prompt: '{{ ansible_ps1 | default("PS1=\"[\d \t \u@\h:\w ] $ \"") }}'
+  roles: [user]

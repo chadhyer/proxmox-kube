@@ -1,0 +1,13 @@
+---
+user_default:
+  name: test
+  id: 1999
+  shell: /bin/bash
+  state: present
+  bashrc: .bashrc
+  sudo: false
+  authorized_keys: .ssh/authorized_keys
+  ssh_key:
+    type: ssh-ed25519
+    public: AAAAC3NzaC1lZDI1NTE5AAAAINTeLzHK6yyI9sB83eo0Qk/X1X6MBKpjCqiT7pWsxjgD
+    id: test@somewhere

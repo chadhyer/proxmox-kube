@@ -1,0 +1,65 @@
+---
+- name: Create group
+  ansible.builtin.group:
+    name: '{{ user.name }}'
+    state: '{{ user.state }}'
+
+- name: Check user
+  register: user_exists
+  changed_when: user_exists == ''
+  ignore_errors: true
+  ansible.builtin.command:
+    cmd: id '{{ user.name }}'
+
+- name: Create user
+  when: user_exists.stdout == ''
+  ansible.builtin.user:
+    name: '{{ user.name }}'
+    uid: '{{ user.id }}'
+    group: '{{ user.name }}'
+    shell: '{{ user.shell }}'
+
+- name: Add user to sudoers
+  when: user.sudo is true
+  ansible.builtin.user:
+    name: '{{ user.name }}'
+    groups:
+      - '{{ user.name }}'
+      - sudo
+
+- name: Create ssh directory
+  ansible.builtin.file:
+    path: '/home/{{ user.name }}/.ssh'
+    state: directory
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: '0700'
+
+- name: Create ssh authorized_keys
+  ansible.builtin.file:
+    path: '/home/{{ user.name }}/.ssh/authorized_keys'
+    state: touch
+    owner: '{{ user.name }}'
+    group: '{{ user.name }}'
+    mode: '0400'
+
+- name: Add ssh public key
+  loop: '{{ user.ssh_key }}'
+  ansible.builtin.lineinfile:
+    path: '/home/{{ user.name }}/{{ user.authorized_keys }}'
+    state: '{{ user.state }}'
+    regexp: '{{ item.id }}'
+    line: >
+      {{ item.type }} {{ item.public }} {{ item.id }}
+
+- name: Update .bashrc
+  loop:
+    - re: '^PS1='
+      li: '{{ user.prompt }}'
+    - re: "^alias ll="
+      li: "alias ll='ls -alF'"
+  ansible.builtin.lineinfile:
+    path: '/home/{{ user.name }}/{{ user.bashrc }}'
+    state: present
+    regexp: '{{ item.re }}'
+    line: '{{ item.li }}'
