@@ -12,7 +12,7 @@ RUN groupadd -g 1000 -r app && \
 # Update and install Ansible/Terraform
 RUN apt-get -y update && apt-get -y upgrade && \
     apt-get -y install \
-        python3 python3-pip gnupg wget ansible && \
+        python3 python3-pip gnupg wget ansible vim && \
     wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | \
         tee /usr/share/keyrings/hashicorp-archive-keyring.gpg > /dev/null && \
     echo "deb [arch=$(dpkg --print-architecture) \
