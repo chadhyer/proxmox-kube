@@ -1,0 +1,8 @@
+---
+usr: chad
+usr_id: 1000
+usr_ssh_pk_public: AAAAC3NzaC1lZDI1NTE5AAAAIN4zqkYzWQB0NrLEEmX9X1Pza5H9OBdI+Oi14rTN39RR
+usr_ssh_pk_id: chad@quasarkey
+usr_ps1: >
+  PS1="\n\[\e[00;31m\]\u\[\e[0m\]\[\e[00;37m\]@\[\e[0m\]\[\e[01;36m\]\h\[\e[0m\]\[\e[00;37m\]
+  \t \[\e[0m\]\[\e[01;35m\]\w\[\e[0m\]\[\e[01;37m\]\[\e[0m\]\n$ "
