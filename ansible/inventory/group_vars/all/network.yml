@@ -1,2 +1,3 @@
 gateway: '192.168.68.1'
 kube_subnet: '192.168.69'
+kube_subnet_mask: '16'
