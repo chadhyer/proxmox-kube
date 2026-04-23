@@ -3,15 +3,36 @@ kube:
   hosts:
     kube_template:
       ansible_host: kube_template
+      label: kube-template
+      id: '190'
+      ip: '192.168.69.190/16'
     cntrl0:
       ansible_host: kube_cntrl0
+      label: kube-cntrl0
+      id: '191'
+      ip: '192.168.69.191/16'
     # cntrl1:
     #   ansible_host: kube_cntrl1
+    #   label: kube-cntrl1
+    #   id: '192'
+    #   ip: '192.168.69.192/16'
     # cntrl2:
     #   ansible_host: kube_cntrl2
+    #   label: kube-cntrl2
+    #   id: '193'
+    #   ip: '192.168.69.193/16'
     worker0:
       ansible_host: kube_worker0
+      label: kube-worker0
+      id: '200'
+      ip: '192.168.69.200/16'
     # worker1:
     #   ansible_host: kube_worker1
+    #   label: kube-worker1
+    #   id: '201'
+    #   ip: '192.168.69.201/16'
     # worker2:
     #   ansible_host: kube_worker2
+    #   label: kube-worker2
+    #   id: '202'
+    #   ip: '192.168.69.202/16'
