@@ -6,5 +6,4 @@ pve_root:
 pve:
   hosts:
     pve0:
-      ansible_host: pve0_ansible
-      node: pve0
+      ansible_host: pve0
