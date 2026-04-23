@@ -1,0 +1,57 @@
+---
+- name: Delete paid repositories
+  tags: ['delete']
+  loop:
+    - ceph.sources
+    - pve-enterprise.sources
+  ansible.builtin.file:
+    path: '/etc/apt/sources.list.d/{{ item }}'
+    state: absent
+
+- name: Get Debian codename
+  register: proxmox_debian_codename
+  changed_when: false
+  ansible.builtin.command:
+    cmd: "awk -F'[()]' '/VERSION=/ {print $2}' /etc/os-release"
+
+- name: Debug Debian codename
+  ansible.builtin.debug:
+    var: proxmox_debian_codename.stdout
+
+- name: Delete existing PVE no subscription repository file
+  ansible.builtin.file:
+    path: '{{ proxmox_repo_file }}'
+    state: absent
+
+- name: Create PVE no subscription repository file
+  ansible.builtin.file:
+    path: '{{ proxmox_repo_file }}'
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Populate PVE no subscription repository file
+  loop:
+    - regexp: '^Types:'
+      line: 'Types: deb'
+    - regexp: 'URIs:'
+      line: 'URIs: http://download.proxmox.com/debian/pve'
+    - regexp: 'Suites:'
+      line: 'Suites: trixie'
+    - regexp: 'Components:'
+      line: 'Components: pve-no-subscription'
+    - regexp: 'Signed-By:'
+      line: 'Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg'
+  ansible.builtin.lineinfile:
+    path: '{{ proxmox_repo_file }}'
+    state: present
+    regexp: '{{ item.regexp }}'
+    line: '{{ item.line }}'
+
+- name: Disable nag message
+  ansible.builtin.lineinfile:
+    path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+    state: present
+    regexp: '                        res.data.status.toLowerCase()'
+    line: "res.data.status.toLowerCase() == 'active'"

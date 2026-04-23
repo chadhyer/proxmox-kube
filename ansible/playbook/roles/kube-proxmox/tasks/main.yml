@@ -1,0 +1,75 @@
+---
+- name: Ping Proxmox
+  ansible.builtin.ping:
+
+- name: Load api_token_secret
+  ansible.builtin.include_vars:
+    file: ../.secret/{{ inventory_hostname }}-proxmox-secret.yml
+
+- name: Get info for Template VM
+  register: pm_template
+  community.proxmox.proxmox_vm_info:
+    api_host: '{{ api_host }}'
+    api_user: '{{ api_user }}'
+    api_token_id: '{{ api_token_id }}'
+    api_token_secret: '{{ api_token_secret }}'
+    node: '{{ inventory_hostname }}'
+    vmid: '{{ hostvars.kube_template.id }}'
+    config: current
+
+- name: List Template VMs
+  ansible.builtin.debug:
+    var: pm_template.proxmox_vms
+
+- name: Check {{ proxmox_repo_file }}
+  tags: [packages]
+  register: proxmox_repo
+  ansible.builtin.stat:
+    path: '{{ proxmox_repo_file }}'
+
+- name: Fix Repositories
+  tags: [packages]
+  when: proxmox_repo.stat.exists is false
+  ansible.builtin.include_tasks:
+    file: fix_repo.yml
+
+- name: Update apt cache and upgrade packages
+  tags: [packages]
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: true
+
+- name: Install basic packages
+  tags: [packages]
+  ansible.builtin.apt:
+    pkg:
+      - net-tools
+      - firefox-esr
+      - python3-proxmoxer
+      - python3-requests
+
+- name: Check for Ubuntu cloudimg
+  register: cloudimg
+  ansible.builtin.stat:
+    path: '{{ proxmox_cloudimg_dir }}{{ proxmox_cloudimg_file }}'
+
+- name: Create cloudimg if missing
+  when: cloudimg.stat.exists is false
+  ansible.builtin.include_tasks:
+    file: cloudimg.yml
+
+- name: Get info for Template VM
+  register: pm_template
+  community.proxmox.proxmox_vm_info:
+    api_host: '{{ api_host }}'
+    api_user: '{{ api_user }}'
+    api_token_id: '{{ api_token_id }}'
+    api_token_secret: '{{ api_token_secret }}'
+    node: '{{ inventory_hostname }}'
+    vmid: '{{ hostvars.kube_template.id }}'
+    config: current
+
+- name: Create Template VM when missing
+  when: pm_template.proxmox_vms | length == 0
+  ansible.builtin.import_tasks:
+    file: create_template.yml

@@ -1,0 +1,9 @@
+---
+proxmox_mode: setup
+proxmox_repo_file: /etc/apt/sources.list.d/pve-no-subscription.sources
+proxmox_storage_vm: local-lvm
+proxmox_cloudimg_dir: /home/ansible/cloudimg/
+proxmox_cloudimg_file: ubuntu24.04-server-cloudimg-amd64.qcow2
+proxmox_cloudimg_url: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
+proxmox_ciuser: ansible
+proxmox_cigw: '192.168.68.1'

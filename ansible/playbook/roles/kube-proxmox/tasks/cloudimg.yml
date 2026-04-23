@@ -1,0 +1,22 @@
+---
+- name: Create/Check cloudimg directory
+  ansible.builtin.file:
+    path: '{{ proxmox_cloudimg_dir }}'
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: '0750'
+
+- name: Download cloudimg file
+  ansible.builtin.get_url:
+    url: '{{ proxmox_cloudimg_url }}'
+    dest: '{{ proxmox_cloudimg_dir }}{{ proxmox_cloudimg_file }}'
+    owner: ansible
+    group: ansible
+    mode: '0640'
+
+- name: Resize IMG file
+  changed_when: true
+  ansible.builtin.command:
+    cmd: >
+      qemu-img resize {{ proxmox_cloudimg_dir }}{{ proxmox_cloudimg_file }} 16G

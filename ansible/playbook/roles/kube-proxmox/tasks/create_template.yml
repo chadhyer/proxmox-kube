@@ -1,0 +1,83 @@
+---
+- name: Create Template VM
+  community.proxmox.proxmox_kvm:
+    api_host: '{{ api_host }}'
+    api_user: '{{ api_user }}'
+    api_token_id: '{{ api_token_id }}'
+    api_token_secret: '{{ api_token_secret }}'
+    node: '{{ inventory_hostname }}'
+    name: '{{ hostvars.kube_template.label }}'
+    vmid: '{{ hostvars.kube_template.id }}'
+    ciuser: '{{ proxmox_ciuser }}'
+    cipassword: '{{ cloudinit_password }}'
+    sshkeys: >
+      {{ ansible_ssh_pk_type | default("ssh-ed25519") }}
+      {{ ansible_ssh_pk_public }}
+      {{ ansible_ssh_pk_id }}
+    net:
+      net0: 'virtio,bridge=vmbr0,firewall=0'
+    ipconfig:
+      ipconfig0: 'ip={{ hostvars.kube_template.ip }},gw={{ gateway }}'
+    nameservers: ['1.1.1.1', '8.8.8.8']
+    cores: 1
+    memory: 1024
+    agent: true
+    timeout: 90
+
+- name: Import cloudimg disk to VM
+  changed_when: true
+  ansible.builtin.shell:
+    cmd: >
+      qm importdisk {{ hostvars.kube_template.id }}
+      {{ proxmox_cloudimg_dir }}{{ proxmox_cloudimg_file }} local-lvm
+
+- name: Get info for Template VM
+  register: pm_template_vm
+  community.proxmox.proxmox_vm_info:
+    api_host: '{{ api_host }}'
+    api_user: '{{ api_user }}'
+    api_token_id: '{{ api_token_id }}'
+    api_token_secret: '{{ api_token_secret }}'
+    node: '{{ inventory_hostname }}'
+    vmid: '{{ hostvars.kube_template.id }}'
+    config: current
+
+- name: Disk to add
+  ansible.builtin.debug:
+    var: pm_template_vm.proxmox_vms[0].config.unused0
+
+- name: Attach Disk
+  changed_when: true
+  ansible.builtin.command:
+    cmd: >
+      qm set {{ hostvars.kube_template.id }} --ide0
+      {{ pm_template_vm.proxmox_vms[0].config.unused0 }},discard=on,ssd=1,size=16G
+
+- name: Update boot order
+  changed_when: true
+  ansible.builtin.command:
+    cmd: qm set {{ hostvars.kube_template.id }} --boot order=ide0
+
+- name: Add cloudinit
+  changed_when: true
+  ansible.builtin.command:
+    cmd: qm set {{ hostvars.kube_template.id }} --ide2 'local-lvm:cloudinit'
+
+- name: Enable Qemu agent
+  changed_when: true
+  ansible.builtin.command:
+    cmd: qm set {{ hostvars.kube_template.id }} --agent enabled=1
+
+- name: Start Template VM for configuration
+  community.proxmox.proxmox_kvm:
+    api_host: '{{ api_host }}'
+    api_user: '{{ api_user }}'
+    api_token_id: '{{ api_token_id }}'
+    api_token_secret: '{{ api_token_secret }}'
+    node: '{{ inventory_hostname }}'
+    vmid: '{{ hostvars.kube_template.id }}'
+    state: started
+
+- name: Give time for working Template VM to boot
+  ansible.builtin.pause:
+    seconds: 45
