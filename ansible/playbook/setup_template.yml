@@ -1,0 +1,5 @@
+---
+- name: Setup Kube Template VM
+  hosts: kube_template
+  become: true
+  roles: [kube-template]

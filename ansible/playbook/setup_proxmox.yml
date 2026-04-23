@@ -1,0 +1,44 @@
+---
+- name: Initial Proxmox Dependencies
+  tags: [initial]
+  hosts: pve_root
+  tasks:
+    - name: Install dependencies
+      ansible.builtin.apt:
+        pkg: [sudo, python3-proxmoxer, python3-requests]
+
+- name: Create Proxmox PAM users
+  tags: [user, users]
+  ansible.builtin.import_playbook: create_users.yml
+
+- name: Configure Proxmox
+  tags: [config]
+  hosts: pve0
+  become: true
+  roles: [kube-proxmox]
+
+- name: Setup Kube Template VM
+  tags: [template]
+  when: hostvars.pve0.pm_template.proxmox_vms | length == 0 or
+    hostvars.pve0.pm_template.proxmox_vms[0].template == false
+  ansible.builtin.import_playbook: setup_template.yml
+
+- name: Convert Kube Worker Template VM into a Template
+  tags: [convert]
+  hosts: pve0
+  become: true
+  tasks:
+    - name: Load api_token_secret
+      ansible.builtin.include_vars:
+        file: ../.secret/{{ inventory_hostname }}-proxmox-secret.yml
+
+    - name: Convert VM into Template
+      community.proxmox.proxmox_kvm:
+        api_host: '{{ api_host }}'
+        api_user: '{{ api_user }}'
+        api_token_id: '{{ api_token_id }}'
+        api_token_secret: '{{ api_token_secret }}'
+        node: '{{ inventory_hostname }}'
+        vmid: '{{ hostvars.kube_template.id }}'
+        state: template
+        force: true
