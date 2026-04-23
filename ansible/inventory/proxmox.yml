@@ -7,3 +7,6 @@ pve:
   hosts:
     pve0:
       ansible_host: pve0
+      api_host: 192.168.69.1
+      api_user: ansible@pam
+      api_token_id: ansible
