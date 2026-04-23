@@ -2,9 +2,25 @@
 image=proxmox-kube-deployer
 build=FALSE
 
+print_help()
+{
+    echo '
+Parameters:
+    -h|--help          Display this helptext
+    -t|--tag <str>     Image tag to target with docker run command.
+    -n|--name <str>    Name to be used for the running container.
+    -e|--env <file>    Environment file (env vars for the container).
+    -u|--uid <int>     User ID for the container user.
+    -g|--gid <int>     Group ID for container user.
+    -b|--build         Execute the docker build command to create the image.
+                            Build tag is set to $(date -I)
+'
+}
+
 # Arguments
 while (( "$#" )); do
     case "$1" in
+        -h|--help) print_help;exit 0;;
         -t|--tag) tag=$2;shift;;
         -n|--name) name=$2;shift;;
         -e|--env) env=$2;shift;;
