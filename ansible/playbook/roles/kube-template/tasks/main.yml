@@ -1,0 +1,143 @@
+---
+- name: Update apt cache and upgrade packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: true
+
+- name: Install Basic Packages
+  tags: [packages]
+  ansible.builtin.apt:
+    pkg:
+      - qemu-guest-agent
+      - containerd
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gpg
+    state: present
+
+- name: Register status of containerd config file
+  register: containerd_config
+  ansible.builtin.stat:
+    path: /etc/containerd/config.toml
+
+- name: Generate new containerd config file
+  when: containerd_config.stat.exists is false
+  block:
+    - name: Create containerd directory
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: Generate default containerd config
+      when: containerd_config.stat.exists is false
+      changed_when: false
+      ansible.builtin.shell:
+        cmd: containerd config default > /etc/containerd/config.toml
+
+- name: Check SystemdCgroup in containerd config file
+  ansible.builtin.lineinfile:
+    path: /etc/containerd/config.toml
+    state: present
+    regexp: 'SystemdCgroup ='
+    line: 'SystemdCgroup = true'
+
+- name: Disable swap
+  changed_when: true
+  ansible.builtin.command:
+    cmd: swapoff -a
+
+- name: Remove swap entries from fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: '^\S+\s+\S+\s+swap\s+'
+    state: absent
+
+- name: Load required kernel modules
+  loop:
+    - overlay
+    - br_netfilter
+  community.general.modprobe:
+    name: '{{ item }}'
+    state: present
+
+- name: Ensure kernel modules load on boot
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/k8s.conf
+    content: |
+      overlay
+      br_netfilter
+    mode: '0640'
+
+- name: Set sysctl params
+  loop:
+    - net.ipv4.ip_forward
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+  ansible.posix.sysctl:
+    name: '{{ item }}'
+    value: '1'
+    sysctl_file: /etc/sysctl.d/k8s.conf
+    reload: true
+
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Get Kube key
+  ansible.builtin.get_url:
+    url: 'https://pkgs.k8s.io/core:/stable:/v{{ k8s_ver | default("1.35") }}/deb/Release.key'
+    dest: /tmp/kubernetes-release.key
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install Kube key
+  ansible.builtin.command:
+    cmd: gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/kubernetes-release.key
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Add Kube APT Repo
+  ansible.builtin.shell:
+    cmd: >
+      set -o pipefail |
+      echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg]
+      https://pkgs.k8s.io/core:/stable:/v1.35/deb/ /' |
+      sudo tee /etc/apt/sources.list.d/kubernetes.list
+    creates: /etc/apt/sources.list.d/kubernetes.list
+
+- name: Update file permissions for Repo file
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/kubernetes.list
+    mode: '0644'
+
+- name: Install kube packages
+  ansible.builtin.apt:
+    pkg:
+      - 'kubeadm={{ k8s_pkg_ver | default("1.35.3-1.1") }}'
+      - 'kubectl={{ k8s_pkg_ver | default("1.35.3-1.1") }}'
+      - 'kubelet={{ k8s_pkg_ver | default("1.35.3-1.1") }}'
+    state: present
+    update_cache: true
+
+- name: Hold Kube pkgs to prevent auto-upgrade
+  loop: [kubeadm, kubectl, kubelet]
+  ansible.builtin.dpkg_selections:
+    name: '{{ item }}'
+    selection: hold
+
+- name: Enable and start kubelet
+  ansible.builtin.systemd:
+    name: kubelet
+    state: started
+    enabled: true
+
+- name: Shut host down
+  community.general.shutdown:
